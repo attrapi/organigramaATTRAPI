@@ -172,7 +172,8 @@
 
     <div class="toolbar">
       <!-- Trenes ANTES de Modo institucional -->
-      <a class="btn hide-m" id="btn-trenes" href="https://attrapi.github.io/trenes/" target="_blank" rel="noopener noreferrer" title="Ir a Trenes" role="button">Trenes</a>
+      <button class="btn hide-m" id="btn-trenes" type="button" title="Ir a Trenes">Trenes</button>
+
 
       <button class="btn hide-m" id="btn-inst" title="Aplicar colores institucionales">Modo institucional</button>
 
@@ -1514,6 +1515,9 @@
     const btnInst = document.getElementById('btn-inst');
     const btnTips = document.getElementById('btn-tooltips');
 
+    document.getElementById('btn-trenes')?.addEventListener('click', ()=> window.open('https://attrapi.github.io/trenes/', '_blank', 'noopener'));
+
+
     btnInst?.addEventListener('click', ()=>{
       const instOn = htmlEl.getAttribute('data-institutional') === 'on';
       htmlEl.setAttribute('data-institutional', instOn ? 'off' : 'on');
@@ -1700,3 +1704,4 @@
   </script>
 </body>
 </html>
+
