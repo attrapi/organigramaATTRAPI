@@ -1354,13 +1354,18 @@
       const bbox = gRoot.node().getBBox();
       const w = host.clientWidth, h = host.clientHeight;
       if (!bbox.width || !bbox.height) return;
-
+    
       const scale = ZOOM_MIN;
-
+    
       let tx = (w - bbox.width * scale)/2 - bbox.x * scale;
       tx += ORG_X_OFFSET;
-      const ty = (h - bbox.height* scale)/2 - bbox.y * scale;
-
+    
+      let ty = (h - bbox.height * scale)/2 - bbox.y * scale;
+    
+      // ✅ FIX: asegura que la parte superior NO se corte
+      const topScreen = bbox.y * scale + ty;
+      if (topScreen < pad) ty += (pad - topScreen);
+    
       const t = d3.zoomIdentity.translate(tx, ty).scale(scale);
       applyTransform(t);
       if (saveHome || !HOME) HOME = t;
@@ -1704,6 +1709,7 @@
   </script>
 </body>
 </html>
+
 
 
 
