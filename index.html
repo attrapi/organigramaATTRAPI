@@ -1242,19 +1242,31 @@
     }
 
     function nodeColor(d){
-      const BRAND = css('--brand', '#691c32');
-      const isInst = document.documentElement.getAttribute('data-institutional') === 'on';
-      if (isInst) return BRAND;
-      const DEPTH_PAL = getDepthPalette();
-      if (d.depth === 1 && d.parent){
-        const siblings = (d.parent.children || d.parent._children || []);
-        const idx = Math.max(0, siblings.indexOf(d));
-        const topPal = getTopPalette();
-        return topPal[idx % topPal.length];
-      }
-      const idx = Math.max(0, d.depth) % DEPTH_PAL.length;
-      return DEPTH_PAL[idx];
-    }
+  const BRAND = css('--brand', '#691c32');
+  const isInst = document.documentElement.getAttribute('data-institutional') === 'on';
+  if (isInst) return BRAND;
+
+  const DEPTH_PAL = getDepthPalette();
+  const topPal = getTopPalette();
+
+  // Nivel 1 (hijos del root): ya lo tenías
+  if (d.depth === 1 && d.parent){
+    const siblings = (d.parent.children || d.parent._children || []);
+    const idx = Math.max(0, siblings.indexOf(d));
+    return topPal[idx % topPal.length];
+  }
+
+  // ✅ Nivel 2 (Unidades): ahora también usa top1..top9 por índice de hermano
+  if (d.depth === 2 && d.parent){
+    const siblings = (d.parent.children || d.parent._children || []);
+    const idx = Math.max(0, siblings.indexOf(d));
+    return topPal[idx % topPal.length];
+  }
+
+  // Resto: sigue usando la paleta por profundidad (como lo traías)
+  const idx = Math.max(0, d.depth) % DEPTH_PAL.length;
+  return DEPTH_PAL[idx];
+}
 
     const rightX = d => (d.y + ((d._box && d._box.w) || (MAX_TEXT_W + PAD_X*2 + 32)));
     const leftX  = d => d.y;
@@ -1898,6 +1910,7 @@
   -->
 </body>
 </html>
+
 
 
 
