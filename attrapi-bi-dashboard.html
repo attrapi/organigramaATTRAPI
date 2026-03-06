@@ -1,0 +1,525 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ATTRAPI — Dashboard de Inteligencia Organizacional</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Nunito:wght@400;600;700;800&display=swap');
+
+  :root {
+    --bg: #f4f2f8;
+    --card: #ffffff;
+    --border: #e8e4f0;
+    --text: #2d2545;
+    --text2: #6b5f82;
+    --text3: #9a90b4;
+    --accent: #7c6cb0;
+    --rosa: #e06480;
+    --gold: #d4a053;
+    --sky: #6baed6;
+    --lila: #9b8ec4;
+    --mint: #6bc4a6;
+    --pink: #e8a0bf;
+    --slate: #a0b4c8;
+    --shadow: 0 2px 16px rgba(100,80,140,0.07);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: var(--bg); color: var(--text); font-family: 'Nunito', system-ui, sans-serif; }
+
+  .header {
+    background: linear-gradient(135deg, #e8e4f0, #f5f0fa, #e4eaf5);
+    border-bottom: 2px solid var(--border);
+    padding: 16px 28px;
+    display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px;
+  }
+  .header h1 {
+    font-family: 'Outfit', sans-serif; font-weight: 900; font-size: 22px;
+    background: linear-gradient(135deg, #7c6cb0, #e07a9a, #f0a862);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  }
+  .header .sub { font-size: 10px; color: var(--text3); letter-spacing: 2.5px; font-weight: 700; text-transform: uppercase; }
+  .header .date { font-size: 11px; color: var(--text3); font-weight: 600; }
+
+  .dash { max-width: 1320px; margin: 0 auto; padding: 20px; }
+
+  /* KPI row */
+  .kpi-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 14px; margin-bottom: 20px; }
+  .kpi {
+    background: var(--card); border-radius: 14px; padding: 18px 20px;
+    border: 1px solid var(--border); box-shadow: var(--shadow);
+    position: relative; overflow: hidden;
+  }
+  .kpi::before {
+    content: ''; position: absolute; top: 0; left: 0; width: 4px; height: 100%;
+    border-radius: 14px 0 0 14px;
+  }
+  .kpi .icon { font-size: 22px; margin-bottom: 6px; }
+  .kpi .value { font-family: 'Outfit', sans-serif; font-size: 32px; font-weight: 900; line-height: 1; }
+  .kpi .label { font-size: 11px; color: var(--text3); font-weight: 700; margin-top: 4px; text-transform: uppercase; letter-spacing: 1px; }
+  .kpi .detail { font-size: 10px; color: var(--text3); margin-top: 6px; }
+
+  /* Grid layout */
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; margin-bottom: 20px; }
+  .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 18px; margin-bottom: 20px; }
+  @media (max-width: 900px) { .grid-2, .grid-3 { grid-template-columns: 1fr; } }
+
+  .card {
+    background: var(--card); border-radius: 16px; padding: 22px;
+    border: 1px solid var(--border); box-shadow: var(--shadow);
+  }
+  .card-title {
+    font-family: 'Outfit', sans-serif; font-weight: 800; font-size: 14px;
+    color: var(--text); margin-bottom: 16px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .card-title .emoji { font-size: 18px; }
+  .card-title .badge {
+    font-size: 9px; background: var(--accent); color: #fff;
+    padding: 2px 8px; border-radius: 6px; font-weight: 700; letter-spacing: 0.5px;
+  }
+
+  /* Treemap */
+  .treemap { display: flex; flex-wrap: wrap; gap: 4px; }
+  .treemap-cell {
+    border-radius: 10px; padding: 10px; color: #fff;
+    display: flex; flex-direction: column; justify-content: space-between;
+    cursor: pointer; transition: transform 0.15s, box-shadow 0.15s;
+    min-height: 70px; position: relative; overflow: hidden;
+  }
+  .treemap-cell:hover { transform: scale(1.03); box-shadow: 0 4px 20px rgba(0,0,0,0.12); z-index: 2; }
+  .treemap-cell .tc-acr { font-family: 'Outfit', sans-serif; font-weight: 900; font-size: 16px; }
+  .treemap-cell .tc-count { font-family: 'Outfit', sans-serif; font-weight: 800; font-size: 22px; opacity: 0.9; }
+  .treemap-cell .tc-label { font-size: 9px; opacity: 0.8; font-weight: 700; }
+  .treemap-cell .tc-bar {
+    position: absolute; bottom: 0; left: 0; height: 3px; background: rgba(255,255,255,0.4);
+    border-radius: 0 0 10px 10px;
+  }
+
+  /* Table */
+  .bi-table { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 12px; }
+  .bi-table thead th {
+    text-align: left; padding: 10px 12px; font-weight: 800; font-size: 10px;
+    color: var(--text3); text-transform: uppercase; letter-spacing: 1px;
+    border-bottom: 2px solid var(--border); position: sticky; top: 0;
+    background: var(--card); cursor: pointer; user-select: none;
+  }
+  .bi-table thead th:hover { color: var(--accent); }
+  .bi-table tbody tr { transition: background 0.1s; }
+  .bi-table tbody tr:hover { background: #f7f5fa; }
+  .bi-table tbody td {
+    padding: 9px 12px; border-bottom: 1px solid #f0edf6; vertical-align: middle;
+  }
+  .bi-table .rank {
+    width: 28px; height: 28px; border-radius: 8px; display: inline-flex;
+    align-items: center; justify-content: center; font-weight: 900;
+    font-family: 'Outfit', sans-serif; font-size: 11px;
+  }
+  .bi-table .bar-cell { position: relative; }
+  .bi-table .bar-bg {
+    position: absolute; top: 50%; transform: translateY(-50%); left: 0;
+    height: 22px; border-radius: 6px; opacity: 0.15;
+  }
+  .bi-table .bar-val { position: relative; font-weight: 800; font-family: 'Outfit', sans-serif; }
+  .badge-level {
+    display: inline-block; padding: 2px 8px; border-radius: 6px;
+    font-size: 10px; font-weight: 700;
+  }
+  .table-scroll { max-height: 420px; overflow-y: auto; }
+  .table-scroll::-webkit-scrollbar { width: 6px; }
+  .table-scroll::-webkit-scrollbar-track { background: #f7f5fa; border-radius: 3px; }
+  .table-scroll::-webkit-scrollbar-thumb { background: #d4cde6; border-radius: 3px; }
+
+  /* Span of control indicator */
+  .soc-row { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+  .soc-label { font-size: 12px; font-weight: 700; color: var(--text2); min-width: 80px; }
+  .soc-bar-bg { flex: 1; height: 10px; background: #f0edf6; border-radius: 5px; overflow: hidden; }
+  .soc-bar { height: 100%; border-radius: 5px; transition: width 0.5s; }
+  .soc-val { font-family: 'Outfit', sans-serif; font-weight: 800; font-size: 13px; min-width: 36px; text-align: right; }
+
+  /* Drill-down panel */
+  .drill {
+    background: #f7f5fa; border-radius: 12px; padding: 16px; margin-top: 14px;
+    border: 1px dashed var(--border); display: none;
+  }
+  .drill.show { display: block; }
+  .drill-title { font-family: 'Outfit', sans-serif; font-weight: 800; font-size: 13px; color: var(--accent); margin-bottom: 10px; }
+  .drill-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+  .chip {
+    padding: 5px 10px; border-radius: 8px; font-size: 10px; font-weight: 700;
+    border: 1px solid var(--border); background: #fff; color: var(--text2);
+    cursor: default; transition: transform 0.1s;
+  }
+  .chip:hover { transform: scale(1.05); }
+
+  .footer {
+    text-align: center; padding: 20px; font-size: 10px; color: var(--text3);
+    border-top: 1px solid var(--border); margin-top: 20px;
+  }
+
+  /* Print */
+  @media print {
+    body { background: #fff; }
+    .header { background: #fff; border-bottom: 2px solid #ddd; }
+    .card { box-shadow: none; border: 1px solid #ddd; page-break-inside: avoid; }
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div>
+    <h1>ATTRAPI — Inteligencia Organizacional</h1>
+    <div class="sub">Dashboard Ejecutivo de Estructura y Análisis</div>
+  </div>
+  <div class="date" id="dateStr"></div>
+</div>
+
+<div class="dash">
+  <!-- KPIs -->
+  <div class="kpi-row" id="kpiRow"></div>
+
+  <!-- Row 1: Treemap + Pie -->
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-title"><span class="emoji">🗺️</span> Mapa de Unidades por Tamaño <span class="badge">TREEMAP</span></div>
+      <div class="treemap" id="treemap"></div>
+      <div class="drill" id="drillPanel">
+        <div class="drill-title" id="drillTitle"></div>
+        <div class="drill-chips" id="drillChips"></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title"><span class="emoji">🍩</span> Distribución por Nivel Jerárquico <span class="badge">DONUT</span></div>
+      <div style="position:relative;height:280px;"><canvas id="chartDonut"></canvas></div>
+    </div>
+  </div>
+
+  <!-- Row 2: Bar + Span of Control -->
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-title"><span class="emoji">📊</span> Áreas por Unidad <span class="badge">BAR CHART</span></div>
+      <div style="position:relative;height:300px;"><canvas id="chartBar"></canvas></div>
+    </div>
+    <div class="card">
+      <div class="card-title"><span class="emoji">🎯</span> Tramo de Control Promedio <span class="badge">SPAN OF CONTROL</span></div>
+      <div id="socContainer"></div>
+      <div style="margin-top:14px;padding:12px;background:#f7f5fa;border-radius:10px;font-size:11px;color:var(--text2);line-height:1.7;">
+        <strong style="color:var(--accent);">¿Qué es el tramo de control?</strong><br>
+        Número promedio de subordinados directos por puesto de mando en cada unidad.
+        Un rango de <strong>3–7</strong> se considera óptimo. Valores muy altos pueden indicar sobrecarga; muy bajos, posible burocracia.
+      </div>
+    </div>
+  </div>
+
+  <!-- Row 3: Horizontal bar (depth) + Radar -->
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-title"><span class="emoji">📐</span> Profundidad Jerárquica por Unidad <span class="badge">DEPTH</span></div>
+      <div style="position:relative;height:300px;"><canvas id="chartDepth"></canvas></div>
+    </div>
+    <div class="card">
+      <div class="card-title"><span class="emoji">🕸️</span> Radar Comparativo de Unidades <span class="badge">RADAR</span></div>
+      <div style="position:relative;height:300px;"><canvas id="chartRadar"></canvas></div>
+    </div>
+  </div>
+
+  <!-- Row 4: Full table -->
+  <div class="card" style="margin-bottom:20px;">
+    <div class="card-title"><span class="emoji">📋</span> Directorio Completo de Áreas <span class="badge" id="tableCount"></span></div>
+    <div style="margin-bottom:12px;display:flex;gap:8px;flex-wrap:wrap;">
+      <input id="tableSearch" placeholder="Filtrar por nombre o siglas..." style="
+        flex:1;min-width:200px;padding:8px 14px;border-radius:10px;border:2px solid var(--border);
+        font-family:inherit;font-size:12px;outline:none;background:#f7f5fa;color:var(--text);
+      "/>
+      <select id="levelFilter" style="
+        padding:8px 14px;border-radius:10px;border:2px solid var(--border);
+        font-family:inherit;font-size:12px;background:#f7f5fa;color:var(--text);cursor:pointer;
+      ">
+        <option value="">Todos los niveles</option>
+      </select>
+    </div>
+    <div class="table-scroll">
+      <table class="bi-table" id="biTable">
+        <thead><tr>
+          <th data-col="rank">#</th>
+          <th data-col="acr">Siglas</th>
+          <th data-col="name">Nombre del Área</th>
+          <th data-col="level">Nivel</th>
+          <th data-col="parent">Reporta a</th>
+          <th data-col="children">Hijos</th>
+          <th data-col="desc">Total Dep.</th>
+        </tr></thead>
+        <tbody id="biBody"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<div class="footer">
+  ATTRAPI — Dashboard de Inteligencia Organizacional · ATTRAPI 2026 · Datos estructurales
+</div>
+
+<script>
+/* ═══ DATA ═══ */
+const ARTF={name:"Secretario de Infraestructura, Comunicaciones y Transportes",a:"SICT",c:[{name:"Director General de la Agencia de Trenes y Transporte Público Integrado",a:"Titular",c:[{name:"Unidad de Economía, Información y Regulación Ferroviaria",a:"UEIRF",c:[{name:"Subdir. Seguimiento de Regulación y Nuevos Proyectos",a:"SSRNP",c:[{name:"JD de la UEIRF",a:"JDUEIRF"}]},{name:"Dir. Regulación Económica",a:"DRE",c:[{name:"Subdir. Contraprestaciones y Bases Reg. Tarifaria",a:"SCBRT",c:[{name:"JD Contraprestaciones y Reg. Tarifaria",a:"JDCBRT"}]},{name:"Subdir. Tarifas Pasajeros, Carga y Serv.",a:"STPCSD",c:[{name:"JD Tarifas Pasajeros y Carga",a:"JDTPCSD"}]}]},{name:"Dir. Evaluación Económica y Financiera",a:"DEEF",c:[{name:"Subdir. Evaluación Económica",a:"SEE"},{name:"Subdir. Análisis Financiero",a:"SAF",c:[{name:"JD Análisis Financiero",a:"JDAF"}]}]},{name:"Dir. Regulación Técnica Ferroviaria",a:"DRTF",c:[{name:"Subdir. Regulación Operación Ferroviaria",a:"SROF",c:[{name:"JD Regulación Técnica Ferroviaria",a:"JDRTF"}]},{name:"Subdir. Infraestructura Ferroviaria",a:"SIF",c:[{name:"JD Regulación de Infraestructura",a:"JDRI"}]}]},{name:"Dir. Información y Estadística Ferroviaria",a:"DIEF",c:[{name:"Subdir. Estadística Ferroviaria",a:"SEF",c:[{name:"JD Estadística Ferroviaria",a:"JDEF"},{name:"Enlace de Información",a:"EI"},{name:"Enlace de Estadística",a:"EE"}]}]}]},{name:"Unidad de Verificación, Seguridad y Registro",a:"UVSR",c:[{name:"Enlace Administrativo UVSR",a:"EAUVSR"},{name:"Subdir. Coordinación con Centros SICT",a:"SCCSICT"},{name:"Subdir. Análisis Operación y Seguridad",a:"SAOS",c:[{name:"Enlace Verificación y Seg. Ferroviaria A",a:"EVSF-A"}]},{name:"Dir. Verificación Ferroviaria A",a:"DVF-A",c:[{name:"Subdir. Verificación Ferroviaria A",a:"SVF-A"},{name:"Subdir. Verificación Ferroviaria B",a:"SVF-B"},{name:"Subdir. Verificación Ferroviaria C",a:"SVF-C"}]},{name:"Dir. Verificación Ferroviaria B",a:"DVF-B",c:[{name:"Subdir. Verificación Ferroviaria D",a:"SVF-D"},{name:"Subdir. Verificación Ferroviaria E",a:"SVF-E"},{name:"Subdir. Verificación Ferroviaria F",a:"SVF-F"}]},{name:"Dir. Verificación Ferroviaria C",a:"DVF-C",c:[{name:"Subdir. Verificación Ferroviaria G",a:"SVF-G"},{name:"Subdir. Verificación Ferroviaria H",a:"SVF-H"}]},{name:"Dir. Registro Ferroviario Mexicano",a:"DRFM",c:[{name:"Subdir. Registro Ferroviario Mexicano",a:"SRFM"}]},{name:"Dir. Seguridad Ferroviaria",a:"DSF",c:[{name:"Subdir. Seguimiento Siniestros",a:"SSSF"},{name:"Subdir. Programas de Seguridad",a:"SPSF"}]}]},{name:"Unidad de Planeación y Proyectos de Transporte Público",a:"UPPTP",c:[{name:"Enlace Planeación de Transporte",a:"EPT"},{name:"Dir. Estudios de Transporte",a:"DET",c:[{name:"Subdir. Estudios de Demanda",a:"SED",c:[{name:"JD Estudios de Demanda",a:"JDED"}]},{name:"Subdir. Análisis Geográfico",a:"SAG"},{name:"Subdir. Ingeniería Transporte Público y Vial",a:"SITPV",c:[{name:"JD Modelación del Transporte",a:"JDMT"},{name:"JD Análisis",a:"JDA"}]}]},{name:"Dir. Proyectos de Transporte",a:"DPT",c:[{name:"Subdir. Seguimiento Proyectos Transporte",a:"SSPT",c:[{name:"JD Diseño y Señalamiento Vial",a:"JDDSV"},{name:"JD Proyectos de Transporte",a:"JDPT"}]},{name:"Subdir. Regulación y Normatividad",a:"SRN",c:[{name:"JD Consulta",a:"JDC"}]}]},{name:"Dir. Integración de Transporte",a:"DIT",c:[{name:"Subdir. Integración de Transporte",a:"SIT",c:[{name:"JD Transporte Modal",a:"JDTM"},{name:"JD Accesibilidad",a:"JDAC"}]}]}]},{name:"Unidad de Proyectos Ferroviarios",a:"UPF",c:[{name:"Enlace Técnico Administrativo",a:"ETA"},{name:"Dir. Proy. Ferroviarios Pasajeros A",a:"DPFP-A"},{name:"Dir. Proy. Ferroviarios Pasajeros B",a:"DPFP-B",c:[{name:"Subdir. Coord. y Seg. Proy. Ferroviarios Pasajeros",a:"SCSPFP",c:[{name:"JD Seg. Infraestructura PFP",a:"JDSIPFP"},{name:"JD Diseño PFP",a:"JDDPFP"}]},{name:"Subdir. Planeación y Evaluación PFP",a:"SPEPFP",c:[{name:"JD Estudios PFP",a:"JDEPFP"},{name:"JD Análisis Operacional PFP",a:"JDAOPFP"}]}]},{name:"Dir. Proy. Ferroviarios Carga y Desarrollo Multimodal",a:"DPFCDM",c:[{name:"Subdir. Coord. y Seg. Proy. Ferroviarios Carga",a:"SCSPFC"},{name:"Subdir. Desarrollo Multimodal y Serv. Auxiliares",a:"SDMSA",c:[{name:"JD Desarrollo Multimodal",a:"JDDM"},{name:"JD Servicios Auxiliares Ferroviarios",a:"JDSAF"}]}]}]},{name:"Unidad de Asuntos Jurídicos",a:"UAJ",c:[{name:"JD Enlace Jurídico",a:"JDEJ"},{name:"Dir. de lo Consultivo",a:"DCONS",c:[{name:"Subdir. Jurídica Instrumentos Regulatorios",a:"SJIR",c:[{name:"JD Análisis Técnico-Normativo",a:"JDATNSF"}]},{name:"Subdir. Consulta Legal",a:"SCL",c:[{name:"JD Contratos y Convenios",a:"JDCC"},{name:"JD Gestión Jurídica",a:"JDGJ"}]},{name:"Subdir. Jurídica Concesiones y Permisos",a:"SJCAP",c:[{name:"JD Análisis Jurídico Concesiones",a:"JDAJCAP"}]}]},{name:"Dir. de lo Contencioso",a:"DCONT",c:[{name:"Subdir. Procedimientos de Sanción",a:"SPS",c:[{name:"JD Procedimientos Adm. Sanción",a:"JDPAS"}]},{name:"Subdir. Juicios y Controversias",a:"SJC",c:[{name:"JD Juicios de Nulidad y Amparo",a:"JDJNA"},{name:"JD Asuntos Laborales y Penales",a:"JDALCAP"}]}]},{name:"Dir. Jurídica Liberación Derecho de Vía",a:"DJCLDV",c:[{name:"Subdir. Jurídica Integración Exp. DV",a:"SJIEDV",c:[{name:"JD Jurídico Integración Exp. DV",a:"JDJIEDV"}]},{name:"Subdir. Jurídica Coord. y Gestión DV",a:"SJCGDV",c:[{name:"JD Jurídico Coord. Gestión DV",a:"JDJCGDV"}]}]},{name:"Dir. Jurídica Obras y Servicios",a:"DJAOSR",c:[{name:"Subdir. Gestión Jurídica Obras y Servicios",a:"SGJOSR",c:[{name:"JD Obras y Servicios A",a:"JDOSR-A"},{name:"JD Obras y Servicios B",a:"JDOSR-B"},{name:"JD Obras y Servicios C",a:"JDOSR-C"}]}]},{name:"Dir. Transparencia y Seg. Auditorías",a:"DTSA",c:[{name:"Subdir. Gestión Técnica Órganos Fiscalizadores",a:"SGTSOF",c:[{name:"JD Gestión Técnica Obras A",a:"JDGTO-A"}]},{name:"Subdir. Transparencia y Acceso Info.",a:"STAI",c:[{name:"JD Recursos Revisión e Info.",a:"JDRRSI"}]}]}]},{name:"Unidad de Administración y Finanzas",a:"UAF",c:[{name:"JD Gestión Administrativa",a:"JDGA",c:[{name:"Enlace Administrativo UAF",a:"EAUAF"}]},{name:"Dir. Recursos Materiales y Servicios Generales",a:"DRMSG",c:[{name:"Subdir. Servicios Generales",a:"SSG",c:[{name:"JD Almacenes e Inventarios",a:"JDAI"}]},{name:"Subdir. Proc. y Contratos AAS",a:"SPCAAS",c:[{name:"JD Procedimientos A",a:"JDP-A"},{name:"JD Procedimientos B",a:"JDP-B"}]},{name:"Subdir. Control Almacenes e Inventarios",a:"SCAI",c:[{name:"Enlace de Contratos",a:"EC"}]},{name:"Subdir. Proc. y Contratos AAS de Obra",a:"SPCAASO",c:[{name:"JD Recursos Materiales de Obra",a:"JDRMO"}]}]},{name:"Dir. Recursos Financieros",a:"DRF",c:[{name:"Subdir. Presupuesto",a:"SPR"},{name:"Subdir. Contabilidad y Pagos",a:"SCP",c:[{name:"JD Contabilidad y Pagos",a:"JDCP"},{name:"JD Servicios Generales Obras",a:"JDSGO"}]},{name:"Subdir. Adm. y Recursos Financieros Obras",a:"SARFO",c:[{name:"JD Administración de Obras",a:"JDAO"},{name:"JD Recursos Financieros Obras",a:"JDRFO"}]}]},{name:"Dir. Recursos Humanos",a:"DRRHH",c:[{name:"JD Seguimiento Asuntos Administrativos",a:"JDSAD"},{name:"Subdir. Control Personal y Capacitación",a:"SCPRC",c:[{name:"JD Servicio Social y Capacitación",a:"JDSSCIS"}]},{name:"Subdir. Remuneraciones y Gestión Personal",a:"SRGP",c:[{name:"JD Trámites y Prestaciones",a:"JDTP"}]}]},{name:"Dir. Tecnologías de la Información",a:"DTIP",c:[{name:"Subdir. Sistemas de Información",a:"SSI"},{name:"Subdir. Telecomunicaciones y Optimización",a:"STOS",c:[{name:"JD Desarrollo de Sistemas",a:"JDDSI"},{name:"JD Análisis y Documentación",a:"JDADDS"},{name:"JD Soporte Técnico e Infraestructura",a:"JDSTIR"}]}]}]},{name:"Unidad de Seguimiento a Proyectos y Asuntos Estratégicos",a:"USPAE",c:[{name:"Coord. Relaciones Institucionales",a:"CRIAC"},{name:"Subdir. Vinculación Asignatarios A",a:"SVAC-A"},{name:"Subdir. Vinculación Asignatarios B",a:"SVAC-B"},{name:"Dir. Programación Proy. Estratégicos",a:"DPPE",c:[{name:"Subdir. Prog. y Seg. Proy. Estratégicos A",a:"SPSPE-A"},{name:"Subdir. Prog. y Seg. Proy. Estratégicos B",a:"SPSPE-B"}]},{name:"Dir. Coord. Técnica y Seg. Proyectos",a:"DCTSP",c:[{name:"Subdir. Análisis Técnico de Proyectos",a:"SATP"}]},{name:"Dir. Seguimiento C",a:"DS-C",c:[{name:"Subdir. Seguimiento Proyectos B",a:"SSP-B"}]},{name:"Dir. Seguimiento D",a:"DS-D"},{name:"Dir. Seguimiento E",a:"DS-E"}]},{name:"Secretario Particular",a:"SP",c:[{name:"Subdir. Control Institucional",a:"SCI",c:[{name:"Enlace Logístico",a:"EL"}]},{name:"Subdir. Control de Gestión",a:"SCG"}]},{name:"Unidad de Ingeniería Ferroviaria",a:"UIF",c:[{name:"Subdir. Control Documental Técnica",a:"SCDT"},{name:"Dir. Planeación y Programación de Obras",a:"DPPO",c:[{name:"Subdir. Planeación y Programación Obras",a:"SPPO"}]},{name:"Dir. Sistemas Ferroviarios",a:"DSFE",c:[{name:"Subdir. Control y Energía",a:"SCE"},{name:"Subdir. Señalización Ferroviaria",a:"SSF"},{name:"Subdir. Telecomunicaciones y Boletaje",a:"STB"}]},{name:"Dir. Material Rodante",a:"DMR",c:[{name:"Subdir. Material Rodante",a:"SMR"},{name:"Subdir. Edificaciones Aux. y Mantenimiento",a:"SEAM"}]},{name:"Dir. Integración Sistemas Ferroviarios",a:"DISF",c:[{name:"Subdir. RAMS",a:"SR"},{name:"Subdir. Regulatoria",a:"SRE"},{name:"Subdir. Técnica",a:"ST"},{name:"Subdir. Operativa",a:"SO"}]}]},{name:"Unidad de Construcción",a:"UC",c:[{name:"Subdir. Oficina Técnica y Proyecto",a:"SOTP",c:[{name:"JD Oficina Técnica",a:"JDOT"},{name:"JD Ingenierías y Proyecto",a:"JDIP"}]},{name:"Subdir. Control Documental Construcción",a:"SCDC"},{name:"Dir. Ingeniería Concursos y Costos",a:"DICCO",c:[{name:"Subdir. Concursos y Costos A",a:"SCC-A",c:[{name:"JD Concursos y Costos A",a:"JDCC-A"}]},{name:"Subdir. Concursos y Costos B",a:"SCC-B",c:[{name:"JD Concursos y Costos B",a:"JDCC-B"}]},{name:"Subdir. Concursos y Costos C",a:"SCC-C",c:[{name:"JD Concursos y Costos C",a:"JDCC-C"}]},{name:"Subdir. Concursos y Costos D",a:"SCC-D",c:[{name:"JD Concursos y Costos D",a:"JDCC-D"}]}]},{name:"Dir. Construcción A",a:"DC-A",c:[{name:"Subdir. Construcción A1",a:"SC-A1",c:[{name:"JD Residencia Obra A1-A",a:"JDRO-A1A"},{name:"JD Residencia Obra A1-B",a:"JDRO-A1B"},{name:"JD Residencia Obra A1-C",a:"JDRO-A1C"}]},{name:"Subdir. Construcción A2",a:"SC-A2",c:[{name:"JD Residencia Obra A2-A",a:"JDRO-A2A"},{name:"JD Residencia Obra A2-B",a:"JDRO-A2B"}]},{name:"Subdir. Construcción A3",a:"SC-A3",c:[{name:"JD Residencia Obra A3-A",a:"JDRO-A3A"},{name:"JD Residencia Obra A3-B",a:"JDRO-A3B"}]},{name:"Subdir. Construcción A4",a:"SC-A4",c:[{name:"JD Edificación A4-A",a:"JDE-A4A"}]}]},{name:"Dir. Construcción B",a:"DC-B",c:[{name:"Subdir. Construcción B1",a:"SC-B1",c:[{name:"JD Residencia Obra B1-A",a:"JDRO-B1A"},{name:"JD Residencia Obra B1-B",a:"JDRO-B1B"}]},{name:"Subdir. Construcción B2",a:"SC-B2",c:[{name:"JD Residencia Obra B2-A",a:"JDRO-B2A"},{name:"JD Residencia Obra B2-B",a:"JDRO-B2B"}]},{name:"Subdir. Construcción B3",a:"SC-B3",c:[{name:"JD Residencia Obra B3-A",a:"JDRO-B3A"}]},{name:"Subdir. Construcción B4",a:"SC-B4",c:[{name:"JD Edificación B4-A",a:"JDE-B4A"}]}]},{name:"Dir. Construcción C",a:"DC-C",c:[{name:"Subdir. Construcción C1",a:"SC-C1",c:[{name:"JD Residencia Obra C1-A",a:"JDRO-C1A"},{name:"JD Residencia Obra C1-B",a:"JDRO-C1B"}]},{name:"Subdir. Construcción C2",a:"SC-C2",c:[{name:"JD Residencia Obra C2-A",a:"JDRO-C2A"}]}]},{name:"Dir. Construcción D",a:"DC-D",c:[{name:"Subdir. Construcción D1",a:"SC-D1",c:[{name:"JD Residencia Obra D1-A",a:"JDRO-D1A"}]},{name:"Subdir. Construcción D2",a:"SC-D2",c:[{name:"JD Residencia Obra D2-A",a:"JDRO-D2A"}]}]},{name:"Dir. Procesos Adm. Construcción",a:"DPAC",c:[{name:"Subdir. Archivos",a:"SA"},{name:"Subdir. Procesos Adm. Construcción",a:"SPAC",c:[{name:"JD Implementación Manuales",a:"JDIMA"},{name:"JD Procedimientos Construcción",a:"JDPC"}]},{name:"Subdir. Gestión Obras Inducidas",a:"SGOI",c:[{name:"JD Gestión Ambiental",a:"JDGAM"},{name:"JD Gestión Obras Inducidas",a:"JDGOI"}]}]}]}]},{name:"Unidad de Vinculación SICT",a:"UVSICT"}]};
+
+const PALETTE=["#e06480","#d4a053","#6baed6","#9b8ec4","#6bc4a6","#e8a0bf","#a0b4c8"];
+const PALETTE_BG=["#fce4ea","#fdf0d8","#ddeef8","#e8e2f4","#d6f0e6","#fbe4ef","#e0e8f0"];
+const LVL=["Secretario","Dir. General","Unidad","Dirección","Subdirección","Jefatura","Enlace"];
+
+function getLevel(n){
+  const l=n.toLowerCase();
+  if(l.includes("secretario de infraestructura"))return 0;
+  if(l.includes("director general"))return 1;
+  if(l.startsWith("unidad")||l.startsWith("coord"))return 2;
+  if(l.startsWith("dir"))return 3;
+  if(l.startsWith("subdir"))return 4;
+  if(l.startsWith("jefatura")||l.startsWith("jd "))return 5;
+  if(l.startsWith("enlace"))return 6;
+  if(l.includes("secretario particular"))return 2;
+  return 4;
+}
+function cntD(n){let c=1;if(n.c)n.c.forEach(x=>c+=cntD(x));return c;}
+function maxDepthOf(n){if(!n.c||!n.c.length)return 0;return 1+Math.max(...n.c.map(maxDepthOf));}
+
+// Flatten
+const all=[];
+function flat(n,pid,d){
+  const lv=getLevel(n.name);
+  const desc=cntD(n)-1;
+  const dc=n.c?n.c.length:0;
+  all.push({name:n.name,acr:n.a,level:lv,depth:d,desc,dc,parentAcr:pid,color:PALETTE[lv],bg:PALETTE_BG[lv]});
+  if(n.c)n.c.forEach(x=>flat(x,n.a,d+1));
+}
+flat(ARTF,null,0);
+
+// Units
+const titular=ARTF.c[0];
+const units=(titular.c||[]).map(u=>({
+  name:u.name,acr:u.a,total:cntD(u),depth:maxDepthOf(u),
+  dirs:(u.c||[]).filter(x=>getLevel(x.name)===3).length,
+  subdirs:function cs(n){let c=0;if(n.c)n.c.forEach(x=>{if(getLevel(x.name)===4)c++;c+=cs(x);});return c;}(u),
+  jefs:function cj(n){let c=0;if(n.c)n.c.forEach(x=>{if(getLevel(x.name)>=5)c++;c+=cj(x);});return c;}(u),
+  // span of control = avg direct children for nodes that have children
+  soc:function sc(n){let sum=0,cnt=0;function walk(x){if(x.c&&x.c.length){sum+=x.c.length;cnt++;x.c.forEach(walk);}}walk(n);return cnt?+(sum/cnt).toFixed(1):0;}(u)
+})).sort((a,b)=>b.total-a.total);
+
+// By level
+const byLevel={};
+all.forEach(n=>{const l=LVL[n.level]||"Otro";byLevel[l]=(byLevel[l]||0)+1;});
+
+// Date
+document.getElementById("dateStr").textContent=new Date().toLocaleDateString("es-MX",{weekday:"long",year:"numeric",month:"long",day:"numeric"});
+
+/* ═══ KPIs ═══ */
+const kpis=[
+  {icon:"🏗️",value:all.length,label:"Áreas Totales",detail:"En toda la estructura organizacional",color:"#7c6cb0"},
+  {icon:"🔷",value:units.length,label:"Unidades",detail:"Áreas de segundo nivel estratégico",color:"#6baed6"},
+  {icon:"📁",value:byLevel["Dirección"]||0,label:"Direcciones",detail:"Tercer nivel de mando operativo",color:"#9b8ec4"},
+  {icon:"📎",value:byLevel["Subdirección"]||0,label:"Subdirecciones",detail:"Áreas de coordinación táctica",color:"#6bc4a6"},
+  {icon:"📌",value:(byLevel["Jefatura"]||0)+(byLevel["Enlace"]||0),label:"Jefaturas + Enlaces",detail:"Nivel operativo base",color:"#e8a0bf"},
+  {icon:"📐",value:Math.max(...all.map(n=>n.depth)),label:"Niveles de Profundidad",detail:"Máxima cadena jerárquica",color:"#d4a053"},
+];
+const kpiRow=document.getElementById("kpiRow");
+kpis.forEach(k=>{
+  const d=document.createElement("div");d.className="kpi";
+  d.style.cssText=``;
+  d.innerHTML=`<div style="position:absolute;top:0;left:0;width:4px;height:100%;background:${k.color};border-radius:14px 0 0 14px;"></div>
+    <div class="icon">${k.icon}</div>
+    <div class="value" style="color:${k.color}">${k.value}</div>
+    <div class="label">${k.label}</div>
+    <div class="detail">${k.detail}</div>`;
+  kpiRow.appendChild(d);
+});
+
+/* ═══ TREEMAP ═══ */
+const tmEl=document.getElementById("treemap");
+const tmTotal=units.reduce((s,u)=>s+u.total,0);
+const UNIT_COLORS=["#e06480","#d4a053","#6baed6","#9b8ec4","#6bc4a6","#e8a0bf","#a0b4c8","#c4a0d6","#a0c8b4","#d6b0a0","#8cb4d6"];
+
+units.forEach((u,i)=>{
+  const pct=u.total/tmTotal;
+  const w=Math.max(80,pct*100);
+  const col=UNIT_COLORS[i%UNIT_COLORS.length];
+  const cell=document.createElement("div");
+  cell.className="treemap-cell";
+  cell.style.cssText=`background:${col};flex:${Math.max(1,Math.round(pct*20))};min-width:${w}px;`;
+  cell.innerHTML=`<div><div class="tc-acr">${u.acr}</div><div class="tc-label">${u.name.replace(/^Unidad de /,"").substring(0,35)}</div></div>
+    <div class="tc-count">${u.total}</div>
+    <div class="tc-bar" style="width:${pct*100*3}%;background:${col}"></div>`;
+  cell.onclick=()=>{
+    const dp=document.getElementById("drillPanel");
+    const dt=document.getElementById("drillTitle");
+    const dc=document.getElementById("drillChips");
+    dt.textContent=`${u.acr} — ${u.dirs} Direcciones, ${u.subdirs} Subdirecciones, ${u.jefs} Jefaturas/Enlaces`;
+    dc.innerHTML="";
+    const unitNodes=all.filter(n=>n.acr!==u.acr).filter(n=>{
+      let cur=n;
+      while(cur.parentAcr){if(cur.parentAcr===u.acr)return true;cur=all.find(x=>x.acr===cur.parentAcr);if(!cur)break;}
+      return false;
+    });
+    unitNodes.slice(0,30).forEach(n=>{
+      const ch=document.createElement("div");ch.className="chip";
+      ch.style.borderLeftColor=n.color;ch.style.borderLeftWidth="3px";
+      ch.innerHTML=`<strong style="color:${n.color}">${n.acr}</strong> ${n.name.substring(0,40)}`;
+      dc.appendChild(ch);
+    });
+    if(unitNodes.length>30){const m=document.createElement("div");m.className="chip";m.textContent=`+${unitNodes.length-30} más…`;dc.appendChild(m);}
+    dp.classList.add("show");
+  };
+  tmEl.appendChild(cell);
+});
+
+/* ═══ DONUT CHART ═══ */
+const donutLabels=Object.keys(byLevel);
+const donutData=Object.values(byLevel);
+const donutColors=donutLabels.map(l=>{const i=LVL.indexOf(l);return i>=0?PALETTE[i]:"#a0b4c8";});
+new Chart(document.getElementById("chartDonut"),{
+  type:"doughnut",
+  data:{labels:donutLabels,datasets:[{data:donutData,backgroundColor:donutColors,borderWidth:3,borderColor:"#fff",hoverBorderWidth:0}]},
+  options:{
+    responsive:true,maintainAspectRatio:false,
+    plugins:{legend:{position:"right",labels:{font:{family:"Nunito",size:11,weight:"700"},padding:12,usePointStyle:true,pointStyleWidth:12}}},
+    cutout:"55%"
+  }
+});
+
+/* ═══ BAR CHART ═══ */
+new Chart(document.getElementById("chartBar"),{
+  type:"bar",
+  data:{
+    labels:units.map(u=>u.acr),
+    datasets:[
+      {label:"Direcciones",data:units.map(u=>u.dirs),backgroundColor:"#9b8ec4",borderRadius:4},
+      {label:"Subdirecciones",data:units.map(u=>u.subdirs),backgroundColor:"#6bc4a6",borderRadius:4},
+      {label:"Jefaturas/Enlaces",data:units.map(u=>u.jefs),backgroundColor:"#e8a0bf",borderRadius:4}
+    ]
+  },
+  options:{
+    responsive:true,maintainAspectRatio:false,
+    plugins:{legend:{labels:{font:{family:"Nunito",size:10,weight:"700"},usePointStyle:true}}},
+    scales:{x:{stacked:true,ticks:{font:{family:"Outfit",size:10,weight:"800"}},grid:{display:false}},
+            y:{stacked:true,ticks:{font:{family:"Outfit",size:10}},grid:{color:"#f0edf6"}}}
+  }
+});
+
+/* ═══ DEPTH CHART ═══ */
+new Chart(document.getElementById("chartDepth"),{
+  type:"bar",
+  data:{
+    labels:units.map(u=>u.acr),
+    datasets:[{label:"Profundidad máxima",data:units.map(u=>u.depth),
+      backgroundColor:units.map((_,i)=>UNIT_COLORS[i%UNIT_COLORS.length]+"88"),
+      borderColor:units.map((_,i)=>UNIT_COLORS[i%UNIT_COLORS.length]),
+      borderWidth:2,borderRadius:6}]
+  },
+  options:{
+    indexAxis:"y",responsive:true,maintainAspectRatio:false,
+    plugins:{legend:{display:false}},
+    scales:{x:{ticks:{font:{family:"Outfit",size:10},stepSize:1},grid:{color:"#f0edf6"}},
+            y:{ticks:{font:{family:"Outfit",size:10,weight:"800"}},grid:{display:false}}}
+  }
+});
+
+/* ═══ RADAR ═══ */
+const top5=units.slice(0,5);
+new Chart(document.getElementById("chartRadar"),{
+  type:"radar",
+  data:{
+    labels:["Total Áreas","Direcciones","Subdirecciones","Jefaturas","Profundidad","Tramo Control"],
+    datasets:top5.map((u,i)=>({
+      label:u.acr,
+      data:[u.total/10,u.dirs,u.subdirs,u.jefs,u.depth,u.soc],
+      backgroundColor:UNIT_COLORS[i]+"22",
+      borderColor:UNIT_COLORS[i],
+      borderWidth:2,pointRadius:3,pointBackgroundColor:UNIT_COLORS[i]
+    }))
+  },
+  options:{
+    responsive:true,maintainAspectRatio:false,
+    plugins:{legend:{labels:{font:{family:"Nunito",size:10,weight:"700"},usePointStyle:true}}},
+    scales:{r:{ticks:{font:{size:9},backdropColor:"transparent"},grid:{color:"#e8e4f0"},
+              pointLabels:{font:{family:"Nunito",size:10,weight:"700"}}}}
+  }
+});
+
+/* ═══ SPAN OF CONTROL ═══ */
+const socEl=document.getElementById("socContainer");
+const maxSoc=Math.max(...units.map(u=>u.soc));
+units.forEach((u,i)=>{
+  const col=UNIT_COLORS[i%UNIT_COLORS.length];
+  const pct=(u.soc/maxSoc)*100;
+  const status=u.soc>=3&&u.soc<=7?"✅":"⚠️";
+  const r=document.createElement("div");r.className="soc-row";
+  r.innerHTML=`<div class="soc-label" style="color:${col}">${u.acr}</div>
+    <div class="soc-bar-bg"><div class="soc-bar" style="width:${pct}%;background:${col}"></div></div>
+    <div class="soc-val" style="color:${col}">${u.soc}</div>
+    <div style="font-size:14px">${status}</div>`;
+  socEl.appendChild(r);
+});
+
+/* ═══ TABLE ═══ */
+const tableBody=document.getElementById("biBody");
+const tableCount=document.getElementById("tableCount");
+let sortCol="desc",sortAsc=false;
+
+function renderTable(filter="",levelF=""){
+  const f=filter.toLowerCase();
+  let rows=all.filter(n=>{
+    const matchText=!f||n.name.toLowerCase().includes(f)||n.acr.toLowerCase().includes(f);
+    const matchLevel=!levelF||(LVL[n.level]||"Otro")===levelF;
+    return matchText&&matchLevel;
+  });
+  rows.sort((a,b)=>{
+    let va=a[sortCol],vb=b[sortCol];
+    if(typeof va==="string")va=va.toLowerCase();
+    if(typeof vb==="string")vb=vb.toLowerCase();
+    return sortAsc?(va>vb?1:-1):(va<vb?1:-1);
+  });
+  tableCount.textContent=rows.length+" áreas";
+  tableBody.innerHTML="";
+  rows.forEach((n,i)=>{
+    const col=n.color;
+    const maxDesc=Math.max(...all.map(x=>x.desc));
+    const pct=maxDesc?(n.desc/maxDesc)*100:0;
+    const tr=document.createElement("tr");
+    tr.innerHTML=`
+      <td><span class="rank" style="background:${n.bg};color:${col}">${i+1}</span></td>
+      <td><strong style="color:${col}">${n.acr}</strong></td>
+      <td style="max-width:280px;font-size:11px;color:var(--text2)">${n.name}</td>
+      <td><span class="badge-level" style="background:${n.bg};color:${col}">${LVL[n.level]||"Otro"}</span></td>
+      <td style="font-size:11px;color:var(--text3)">${n.parentAcr||"—"}</td>
+      <td style="font-family:'Outfit';font-weight:800;color:${col};text-align:center">${n.dc}</td>
+      <td class="bar-cell" style="min-width:100px">
+        <div class="bar-bg" style="width:${pct}%;background:${col}"></div>
+        <span class="bar-val" style="color:${col}">${n.desc}</span>
+      </td>`;
+    tableBody.appendChild(tr);
+  });
+}
+
+// Sort headers
+document.querySelectorAll("#biTable thead th").forEach(th=>{
+  th.addEventListener("click",()=>{
+    const col=th.dataset.col;
+    const map={rank:"depth",acr:"acr",name:"name",level:"level",parent:"parentAcr",children:"dc",desc:"desc"};
+    if(map[col]===sortCol)sortAsc=!sortAsc;else{sortCol=map[col];sortAsc=col==="name"||col==="acr";}
+    renderTable(document.getElementById("tableSearch").value,document.getElementById("levelFilter").value);
+  });
+});
+
+// Filters
+document.getElementById("tableSearch").addEventListener("input",e=>renderTable(e.target.value,document.getElementById("levelFilter").value));
+const levelSel=document.getElementById("levelFilter");
+[...new Set(all.map(n=>LVL[n.level]||"Otro"))].sort().forEach(l=>{
+  const o=document.createElement("option");o.value=l;o.textContent=l;levelSel.appendChild(o);
+});
+levelSel.addEventListener("change",e=>renderTable(document.getElementById("tableSearch").value,e.target.value));
+
+renderTable();
+</script>
+</body>
+</html>
