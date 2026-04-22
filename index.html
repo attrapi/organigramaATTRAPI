@@ -51,7 +51,7 @@
 
     .btn{
       padding:6px 14px;border:1px solid var(--stroke);border-radius:999px;background:#fff;
-      font-weight:600;font-size:12.5px;color:var(--text);cursor:pointer;
+      font-weight:600;font-size:12.5px;color:var(--muted);cursor:pointer;
       display:inline-flex;align-items:center;gap:6px;line-height:1.4;
       transform: translateY(0) scale(1);
       transition:background-color .18s,border-color .18s,box-shadow .18s,transform .16s cubic-bezier(.2,.8,.2,1);
@@ -60,7 +60,7 @@
     }
     a.btn, a.btn:visited{ color: inherit; }
 
-    [data-theme="dark"] .btn{ background:#0b1220; color:#e5e7eb; border-color:#1f2937; }
+    [data-theme="dark"] .btn{ background:#0b1220; color:#cbd5e1; border-color:#1f2937; }
     .btn:hover{ background:#f8fafc; border-color:#cbd5e1; transform: translateY(-1px) scale(1.035); box-shadow:0 8px 18px rgba(2,6,23,.10); }
     .btn:active{ transform:translateY(0) scale(0.997); box-shadow: inset 0 2px 0 rgba(0,0,0,.04); }
     .btn:focus-visible{ outline: none; box-shadow: 0 0 0 3px rgba(59,130,246,.35); }
@@ -152,6 +152,7 @@
       padding:6px 14px; background:#fff; border:1px solid var(--stroke);
       border-radius:999px; font-weight:600; font-size:12.5px;
       color:var(--muted); user-select:none; line-height:1.4;
+      margin-left:auto;
     }
     [data-theme="dark"] .visits{ background:#0b1220; border-color:#1f2937; color:#cbd5e1; }
     .visits-dot{
@@ -185,12 +186,6 @@
     </div>
 
     <div class="toolbar">
-      <div class="visits" id="visits" title="Visualizaciones totales del organigrama" aria-live="polite">
-        <span class="visits-dot" aria-hidden="true"></span>
-        <span>Visualizaciones</span>
-        <span class="visits-count" id="visits-count">—</span>
-      </div>
-
       <button class="btn hide-m" id="btn-trenes" type="button" title="Ir a Trenes">Trenes</button>
 
       <button class="btn hide-m" id="btn-inst" title="Aplicar colores institucionales">Modo institucional</button>
@@ -200,6 +195,12 @@
       <button class="btn hide-m" id="btn-collapse">Colapsar todo</button>
 
       <button class="btn hide-m" id="btn-download" title="Descargar PDF del organigrama">Descargar PDF</button>
+
+      <div class="visits" id="visits" title="Visualizaciones totales del organigrama" aria-live="polite">
+        <span class="visits-dot" aria-hidden="true"></span>
+        <span>Visualizaciones</span>
+        <span class="visits-count" id="visits-count">—</span>
+      </div>
     </div>
 
     <div class="note">
