@@ -154,6 +154,31 @@
     .attr-tooltip ol{ margin:0; padding-left:18px; max-height:260px; overflow:auto }
     .attr-tooltip li{ margin:6px 0; font-size:12.5px }
     .attr-tooltip code{ font-family: ui-monospace, Menlo, Consolas, "Liberation Mono", monospace; font-size: 12px; }
+
+    .visits{
+      display:inline-flex; align-items:center; gap:8px;
+      padding:6px 12px; background:#fff; border:1px solid var(--stroke);
+      border-radius:999px; font-weight:600; font-size:12.5px;
+      color:var(--muted); user-select:none;
+    }
+    [data-theme="dark"] .visits{ background:#0b1220; border-color:#1f2937; color:#cbd5e1; }
+    .visits-dot{
+      width:7px; height:7px; border-radius:50%; background:var(--brand);
+      box-shadow:0 0 0 0 rgba(105,28,50,.55); animation: visits-pulse 2.2s infinite;
+    }
+    [data-theme="dark"] .visits-dot{ box-shadow:0 0 0 0 rgba(244,114,182,.55); }
+    @keyframes visits-pulse{
+      0%{ box-shadow:0 0 0 0 rgba(105,28,50,.45); }
+      70%{ box-shadow:0 0 0 8px rgba(105,28,50,0); }
+      100%{ box-shadow:0 0 0 0 rgba(105,28,50,0); }
+    }
+    .visits-count{ color:var(--text); font-weight:800; font-variant-numeric: tabular-nums; }
+    [data-theme="dark"] .visits-count{ color:#e5e7eb; }
+    [data-institutional="on"] .visits{
+      background:rgba(255,255,255,.12) !important; border-color:rgba(255,255,255,.28) !important; color:#fff !important;
+    }
+    [data-institutional="on"] .visits-count{ color:#fff !important; }
+    [data-institutional="on"] .visits-dot{ background:#fff !important; }
   </style>
 </head>
 <body>
@@ -168,6 +193,12 @@
     </div>
 
     <div class="toolbar">
+      <div class="visits" id="visits" title="Visualizaciones totales del organigrama" aria-live="polite">
+        <span class="visits-dot" aria-hidden="true"></span>
+        <span>Visualizaciones</span>
+        <span class="visits-count" id="visits-count">—</span>
+      </div>
+
       <button class="btn hide-m" id="btn-trenes" type="button" title="Ir a Trenes">Trenes</button>
       <button class="btn hide-m" id="btn-bi" type="button" title="Dashboard de Inteligencia Organizacional">📊 Inteligencia Organizacional</button>
 
@@ -1187,6 +1218,30 @@
 
   <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+
+  <script>
+  (function(){
+    var el = document.getElementById('visits-count');
+    if(!el) return;
+    var NS = 'attrapi-organigrama-2026';
+    var KEY = 'visitas';
+    var SESSION_FLAG = 'attrapi_visit_counted_v1';
+    var alreadyCounted = false;
+    try { alreadyCounted = sessionStorage.getItem(SESSION_FLAG) === '1'; } catch(e){}
+    var endpoint = alreadyCounted
+      ? 'https://abacus.jasoncameron.dev/get/' + NS + '/' + KEY
+      : 'https://abacus.jasoncameron.dev/hit/' + NS + '/' + KEY;
+    fetch(endpoint, { cache: 'no-store' })
+      .then(function(r){ return r.ok ? r.json() : Promise.reject(r.status); })
+      .then(function(data){
+        var n = (data && typeof data.value === 'number') ? data.value : null;
+        if(n === null) throw new Error('bad');
+        el.textContent = n.toLocaleString('es-MX');
+        try { sessionStorage.setItem(SESSION_FLAG, '1'); } catch(e){}
+      })
+      .catch(function(){ el.textContent = '—'; });
+  })();
+  </script>
 </body>
 </html>
 
