@@ -51,12 +51,14 @@
 
     .btn{
       padding:6px 14px;border:1px solid var(--stroke);border-radius:999px;background:#fff;
-      font-weight:600;font-size:12.5px;color:var(--muted);cursor:pointer;
+      font-family:inherit;font-weight:600;font-size:12.5px;letter-spacing:0;
+      color:var(--muted);cursor:pointer;
       display:inline-flex;align-items:center;gap:6px;line-height:1.4;
       transform: translateY(0) scale(1);
       transition:background-color .18s,border-color .18s,box-shadow .18s,transform .16s cubic-bezier(.2,.8,.2,1);
       will-change: transform, box-shadow, background-color, border-color;
       text-decoration:none;
+      -webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;
     }
     a.btn, a.btn:visited{ color: inherit; }
 
@@ -150,9 +152,11 @@
     .visits{
       display:inline-flex; align-items:center; gap:8px;
       padding:6px 14px; background:#fff; border:1px solid var(--stroke);
-      border-radius:999px; font-weight:600; font-size:12.5px;
+      border-radius:999px;
+      font-family:inherit; font-weight:600; font-size:12.5px; letter-spacing:0;
       color:var(--muted); user-select:none; line-height:1.4;
       margin-left:auto;
+      -webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;
     }
     [data-theme="dark"] .visits{ background:#0b1220; border-color:#1f2937; color:#cbd5e1; }
     .visits-dot{
