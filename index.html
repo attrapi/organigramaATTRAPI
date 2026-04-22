@@ -50,7 +50,9 @@
     .toolbar{margin-left:auto;display:flex;gap:8px;flex-wrap:wrap;align-items:center}
 
     .btn{
-      padding:8px 12px;border:1px solid var(--stroke);border-radius:10px;background:#fff;font-weight:600;cursor:pointer;
+      padding:6px 14px;border:1px solid var(--stroke);border-radius:999px;background:#fff;
+      font-weight:600;font-size:12.5px;color:var(--text);cursor:pointer;
+      display:inline-flex;align-items:center;gap:6px;line-height:1.4;
       transform: translateY(0) scale(1);
       transition:background-color .18s,border-color .18s,box-shadow .18s,transform .16s cubic-bezier(.2,.8,.2,1);
       will-change: transform, box-shadow, background-color, border-color;
@@ -58,12 +60,12 @@
     }
     a.btn, a.btn:visited{ color: inherit; }
 
-    [data-theme="dark"] .btn{ background:#111827; color:#e5e7eb; border-color:#1f2937; }
+    [data-theme="dark"] .btn{ background:#0b1220; color:#e5e7eb; border-color:#1f2937; }
     .btn:hover{ background:#f8fafc; border-color:#cbd5e1; transform: translateY(-1px) scale(1.035); box-shadow:0 8px 18px rgba(2,6,23,.10); }
     .btn:active{ transform:translateY(0) scale(0.997); box-shadow: inset 0 2px 0 rgba(0,0,0,.04); }
     .btn:focus-visible{ outline: none; box-shadow: 0 0 0 3px rgba(59,130,246,.35); }
 
-    [data-theme="dark"] header .btn:not(.fancy):hover{
+    [data-theme="dark"] header .btn:hover{
       background:#1f2937 !important;
       border-color:#334155 !important;
       color:#e5e7eb !important;
@@ -128,17 +130,7 @@
       100%{opacity:0; pointer-events:none;}
     }
 
-    .btn.fancy{ width:170px;height:38px;border-radius:24px;border:3px solid #ff304f;background:none;display:flex;align-items:center;justify-content:center;gap:6px;overflow:hidden;transition: transform .16s cubic-bezier(.2,.8,.2,1), box-shadow .18s ease;}
-    .btn.fancy .lbl, .btn.fancy svg{ position:absolute; letter-spacing:1.2px; font-weight:800; text-transform:uppercase; color:#002651; fill:transparent; }
-    .btn.fancy svg{ width:20px; height:20px; }
-    .btn.fancy:hover{ transform: translateY(-1px) scale(1.04); box-shadow: 0 8px 18px rgba(2,6,23,.10); }
-    .btn.fancy.animating{ width:54px; border-left:3px solid #1e2a78; border-bottom:3px solid #1e2a78; animation: spin 1800ms 200ms forwards ease-in-out; }
-    .btn.fancy.animating .lbl{ color: transparent; }
-    .btn.fancy.animating svg{ animation: check 500ms 1800ms forwards ease-out; }
-    @keyframes spin { 80%{border:3px solid transparent;border-left:3px solid #303a52;} 100%{transform: rotate(1080deg); border:3px solid #303a52;} }
-    @keyframes check { to { fill:#17b978; } }
     @media (max-width:768px){ header{gap:8px;} .search input{min-width:140px;} .toolbar .btn.hide-m{display:none!important} .note .full{display:none} .note .short{display:inline} }
-    [data-theme="dark"] .btn.fancy .lbl, [data-institutional="on"] .btn.fancy .lbl { color:#fff !important; }
 
     .attr-badge rect, .proc-badge rect{ fill: var(--brand); rx:10px; }
     .attr-badge text, .proc-badge text{ fill:#fff; font-size:11px; font-weight:700; }
@@ -157,9 +149,9 @@
 
     .visits{
       display:inline-flex; align-items:center; gap:8px;
-      padding:6px 12px; background:#fff; border:1px solid var(--stroke);
+      padding:6px 14px; background:#fff; border:1px solid var(--stroke);
       border-radius:999px; font-weight:600; font-size:12.5px;
-      color:var(--muted); user-select:none;
+      color:var(--muted); user-select:none; line-height:1.4;
     }
     [data-theme="dark"] .visits{ background:#0b1220; border-color:#1f2937; color:#cbd5e1; }
     .visits-dot{
@@ -200,19 +192,14 @@
       </div>
 
       <button class="btn hide-m" id="btn-trenes" type="button" title="Ir a Trenes">Trenes</button>
-      <button class="btn hide-m" id="btn-bi" type="button" title="Dashboard de Inteligencia Organizacional">📊 Inteligencia Organizacional</button>
 
       <button class="btn hide-m" id="btn-inst" title="Aplicar colores institucionales">Modo institucional</button>
 
       <button class="btn hide-m" id="btn-tooltips" title="Mostrar/ocultar badges de Atribuciones y Procedimientos">Atribuciones y Procedimientos</button>
 
-      <button class="btn hide-m" id="btn-expand">Expandir todo</button>
       <button class="btn hide-m" id="btn-collapse">Colapsar todo</button>
 
-      <button class="btn fancy noselect" id="btn-download" title="Descargar PDF del organigrama">
-        <span class="lbl">Descargar PDF</span>
-        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M0 11c2.761.575 6.312 1.688 9 3.438 3.157-4.23 8.828-8.187 15-11.438-5.861 5.775-10.711 12.328-14 18.917-2.651-3.766-5.547-7.271-10-10.917z"/></svg>
-      </button>
+      <button class="btn hide-m" id="btn-download" title="Descargar PDF del organigrama">Descargar PDF</button>
     </div>
 
     <div class="note">
@@ -1112,7 +1099,6 @@
     window.addEventListener('load', autoFit, { once: true });
     window.addEventListener('pageshow', () => autoFit());
 
-    document.getElementById('btn-expand').onclick = ()=>{ expandAll(); update(root); setTimeout(()=>goHome(), 30); };
     document.getElementById('btn-collapse').onclick = ()=>{ collapseAll(); root.children = root._children; root._children=null; clearPinned(); hideTooltip(); update(root); setTimeout(()=>goHome(), 30); };
 
     // ===== Buscador =====
@@ -1166,8 +1152,6 @@
 
     document.getElementById('btn-trenes')?.addEventListener('click', ()=> window.open('https://attrapi.github.io/trenes/', '_blank', 'noopener'));
 
-    document.getElementById('btn-bi')?.addEventListener('click', ()=> window.open('https://attrapi.github.io/organigramaATTRAPI/attrapi-bi-dashboard.html', '_blank', 'noopener'));
-
     document.getElementById('btn-inst')?.addEventListener('click', ()=>{
       const instOn = htmlEl.getAttribute('data-institutional') === 'on';
       htmlEl.setAttribute('data-institutional', instOn ? 'off' : 'on');
@@ -1208,9 +1192,8 @@
     }
 
     document.getElementById('btn-download').addEventListener('click', async () => {
-      try{ document.getElementById('btn-download').classList.add('animating'); await exportPDF(); }
+      try { await exportPDF(); }
       catch (err){ console.error('Error al exportar PDF:', err); alert('Ups, no pude generar el PDF.'); }
-      finally { setTimeout(()=> document.getElementById('btn-download').classList.remove('animating'), 2300); }
     });
 
   })();
