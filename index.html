@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="es" data-theme="light">
+<html lang="es" data-theme="light" data-institutional="on">
 <head>
   <meta charset="UTF-8" />
   <title>Organigrama — ATTRAPI</title>
@@ -191,8 +191,6 @@
 
     <div class="toolbar">
       <button class="btn hide-m" id="btn-trenes" type="button" title="Ir a Trenes">Trenes</button>
-
-      <button class="btn hide-m" id="btn-inst" title="Aplicar colores institucionales">Modo institucional</button>
 
       <button class="btn hide-m" id="btn-tooltips" title="Mostrar/ocultar badges de Atribuciones y Procedimientos">Atribuciones y Procedimientos</button>
 
@@ -1153,17 +1151,7 @@
     inputEl.addEventListener('keydown', (e)=>{ if (e.key === 'Enter') showResults(); });
     document.getElementById('btn-clear').onclick = ()=>{ inputEl.value = ''; refreshDatalist(''); clearMatches(); goHome(); };
 
-    const htmlEl  = document.documentElement;
-
     document.getElementById('btn-trenes')?.addEventListener('click', ()=> window.open('https://attrapi.github.io/trenes/', '_blank', 'noopener'));
-
-    document.getElementById('btn-inst')?.addEventListener('click', ()=>{
-      const instOn = htmlEl.getAttribute('data-institutional') === 'on';
-      htmlEl.setAttribute('data-institutional', instOn ? 'off' : 'on');
-      document.getElementById('btn-inst').textContent = instOn ? 'Modo institucional' : 'Institucional: ON';
-      update(root);
-      setTimeout(()=> goHome(), 20);
-    });
 
     document.getElementById('btn-tooltips')?.addEventListener('click', ()=>{
       showToolBadges = !showToolBadges;
