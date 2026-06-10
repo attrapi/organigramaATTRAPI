@@ -739,6 +739,7 @@
     const MAX_TEXT_W = 270, PAD_X = 16;
     const ZOOM_MIN = 0.59;
     const ZOOM_MAX = 2.6;
+    const DEFAULT_ZOOM = 0.85; // zoom inicial al abrir/refrescar (un poco más grande que ZOOM_MIN)
 
     const host = document.getElementById('chart');
     const resultsEl = document.getElementById('results');
@@ -1055,7 +1056,7 @@
       const bbox = gRoot.node().getBBox();
       const w = host.clientWidth, h = host.clientHeight;
       if (!bbox.width || !bbox.height) return;
-      const scale = ZOOM_MIN;
+      const scale = Math.min(DEFAULT_ZOOM, ZOOM_MAX);
       let tx = (w - bbox.width * scale)/2 - bbox.x * scale + ORG_X_OFFSET;
       let ty = (h - bbox.height * scale)/2 - bbox.y * scale;
       const topScreen = bbox.y * scale + ty;
